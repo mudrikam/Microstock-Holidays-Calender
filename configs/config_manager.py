@@ -4,7 +4,10 @@ from pathlib import Path
 from datetime import datetime
 
 
-_CONFIG_PATH = Path(__file__).parent / "configs" / "config.json"
+_CONFIG_PATH = Path(__file__).parent / "config.json"
+_TEMP_DIR = Path(__file__).parent.parent / "temp"
+_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+_SECRETS_PATH = _TEMP_DIR / "secrets.json"
 
 _DEFAULTS = {
     "api": {
@@ -16,7 +19,7 @@ _DEFAULTS = {
         "expire_days": 7,
         "use_sqlite": True,
         "sqlite_path": "cache.db",
-        "json_fallback_path": "cache_fallback.json"
+        "json_fallback_path": "temp/cache_fallback.json"
     },
     "ui": {
         "window_width": 1280,
@@ -45,24 +48,23 @@ def _deep_merge(base: dict, override: dict) -> dict:
 
 def load():
     global _config
-    if _CONFIG_PATH.exists():
-        try:
+    try:
+        if _CONFIG_PATH.exists():
             with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
                 loaded = json.load(f)
             _config = _deep_merge(_DEFAULTS, loaded)
-        except Exception:
+        else:
             _config = dict(_DEFAULTS)
-    else:
+            save()
+    except Exception as e:
+        print(f"Configuration load failed: {e}")
         _config = dict(_DEFAULTS)
-        save()
 
 
 def save():
-    try:
-        with open(_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(_config, f, indent=2)
-    except Exception:
-        pass
+    _CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(_config, f, indent=2)
 
 
 def get(section: str, key: str, fallback=None):
@@ -76,6 +78,12 @@ def set_value(section: str, key: str, value):
 
 
 def get_api_key() -> str:
+    if _SECRETS_PATH.exists():
+        try:
+            with open(_SECRETS_PATH, "r", encoding="utf-8") as f:
+                return json.load(f).get("api_key", "")
+        except Exception:
+            pass
     return get("api", "key", "")
 
 

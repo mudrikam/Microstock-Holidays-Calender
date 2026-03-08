@@ -8,7 +8,7 @@
     "expire_days": 7,
     "use_sqlite": true,
     "sqlite_path": "cache.db",
-    "json_fallback_path": "cache_fallback.json"
+    "json_fallback_path": "temp/cache_fallback.json"
   },
   "ui": {
     "window_width": 900,

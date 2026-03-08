@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
-import config_manager
-import db_manager
-from logger import logger
+from configs import config_manager
+from database import db_manager
+from helper.logger import logger
 
 
 def _json_path() -> Path:
     rel = config_manager.get_cache("json_fallback_path", "cache_fallback.json")
-    return Path(__file__).parent / rel
+    return Path(__file__).parent.parent / rel
 
 
 def _load_json_store() -> dict:
@@ -16,17 +16,17 @@ def _load_json_store() -> dict:
         try:
             with open(p, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to read JSON fallback cache: {e}")
             return {}
     return {}
 
 
 def _save_json_store(store: dict):
-    try:
-        with open(_json_path(), "w", encoding="utf-8") as f:
-            json.dump(store, f, indent=2)
-    except Exception:
-        pass
+    p = _json_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(store, f, indent=2)
 
 
 def _json_key(country: str, year: int, month: int) -> str:
@@ -101,8 +101,6 @@ def get_holidays(country: str, year: int, month: int) -> list | None:
                 f"Derived from all-year: {country} {year}/{month} "
                 f"({len(filtered)} holidays)"
             )
-            # Only persist if there is something — an empty derivation may mean
-            # the all-year data itself was incomplete, so we must not poison the cache
             if filtered:
                 _store_internal(country, year, month, filtered)
             return filtered
@@ -146,4 +144,3 @@ def clear_all():
     if p.exists():
         p.unlink()
     logger.info("All caches cleared.")
-

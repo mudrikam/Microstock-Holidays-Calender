@@ -8,8 +8,8 @@ if sys.platform == "win32":
     try:
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("HolidayExplorer.App.1.0")
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Failed to set App User Model ID: {e}")
 
 # Suppress benign Qt6/Windows DPI font-size warnings from internal Qt subsystems
 from PySide6.QtCore import qInstallMessageHandler, QtMsgType
@@ -29,9 +29,9 @@ from PySide6.QtCore import Qt, QThreadPool, QDate, QPoint
 from PySide6.QtGui import QFont, QIcon
 import qtawesome as qta
 
-import theme_system as theme
-import config_manager
-from logger import logger
+import helper.theme_system as theme
+from configs import config_manager
+from helper.logger import logger
 
 from widgets.sidebar import Sidebar
 from widgets.filter_bar import FilterBar
@@ -434,7 +434,7 @@ class MainWindow(QMainWindow):
                 return
             # 2. Check DB/JSON cache synchronously — avoids spawning a thread when data
             #    is already persisted (e.g. after a World fetch or on restart)
-            import cache_manager as cm
+            import helper.cache_manager as cm
             cached = cm.get_holidays(self._current_country, self._current_year, self._current_month)
             if cached is not None:
                 self._memory_cache[key] = cached
@@ -487,7 +487,7 @@ class MainWindow(QMainWindow):
             self._holidays_tab.calendar_view.set_holidays(self._holidays)
 
     def _on_refresh(self):
-        import cache_manager as cm
+        import helper.cache_manager as cm
         cm.clear_all()
         self._memory_cache.clear()
         self._month_counts.clear()

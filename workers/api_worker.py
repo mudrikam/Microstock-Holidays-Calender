@@ -1,7 +1,7 @@
 from PySide6.QtCore import QRunnable, QObject, Signal, Slot
-import api_client
-import cache_manager
-from logger import logger
+from helper import api_client
+from helper import cache_manager
+from helper.logger import logger
 
 WORLD_COUNTRIES = [
     "US", "GB", "DE", "FR", "JP", "CN", "IN", "BR", "AU", "CA",

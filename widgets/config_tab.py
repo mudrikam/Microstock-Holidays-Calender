@@ -7,10 +7,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 import qtawesome as qta
-import theme_system as theme
-import config_manager
-import cache_manager
-from logger import logger
+import helper.theme_system as theme
+from configs import config_manager
+from helper import cache_manager
+from helper.logger import logger
 
 
 class FieldRow(QFrame):

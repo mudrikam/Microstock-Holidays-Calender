@@ -211,3 +211,5 @@ __marimo__/
 #  Add any additional files or directories that are specific to your project and should be ignored by Git.
 cache.db
 cache_fallback.json
+.github/
+temp/

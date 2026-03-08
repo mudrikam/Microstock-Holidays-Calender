@@ -2,8 +2,8 @@ import urllib.request
 import urllib.parse
 import json
 import ssl
-import config_manager
-from logger import logger
+from configs import config_manager
+from helper.logger import logger
 
 
 _HEADERS = {

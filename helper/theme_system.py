@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 
-_THEME_PATH = Path(__file__).parent / "configs" / "theme.json"
+_THEME_PATH = Path(__file__).parent.parent / "configs" / "theme.json"
 _theme_data = {}
 
 
@@ -337,7 +337,7 @@ QCheckBox::indicator {{
 QCheckBox::indicator:checked {{
     background-color: {c.get('accent', '#ff6a00')};
     border: 1px solid {c.get('accent', '#ff6a00')};
-    image: url("{str(Path(__file__).parent / 'assets' / 'check.svg').replace(chr(92), '/')}");
+    image: url("{str(Path(__file__).parent.parent / 'assets' / 'check.svg').replace(chr(92), '/')}");
 }}
 
 QCheckBox::indicator:indeterminate {{

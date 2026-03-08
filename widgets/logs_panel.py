@@ -5,8 +5,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QFont, QTextCursor, QColor
 import qtawesome as qta
-import theme_system as theme
-from logger import logger
+import helper.theme_system as theme
+from helper.logger import logger
 
 
 LEVEL_STYLES = {

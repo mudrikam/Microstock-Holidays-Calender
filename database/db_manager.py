@@ -2,7 +2,7 @@ import sqlite3
 import json
 from pathlib import Path
 from datetime import datetime
-import config_manager
+from configs import config_manager
 
 
 def _db_path() -> Path:
