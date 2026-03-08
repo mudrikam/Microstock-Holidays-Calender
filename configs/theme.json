@@ -1,0 +1,90 @@
+{
+  "colors": {
+    "background": "#0d0d0d",
+    "surface": "#161616",
+    "surface_raised": "#1e1e1e",
+    "surface_overlay": "#252525",
+    "border": "#2a2a2a",
+    "border_accent": "#ff6a00",
+    "text_primary": "#f0f0f0",
+    "text_secondary": "#999999",
+    "text_muted": "#555555",
+    "accent": "#ff6a00",
+    "accent_hover": "#ff8533",
+    "accent_pressed": "#cc5500",
+    "accent_dim": "#4d2000",
+    "success": "#00c853",
+    "warning": "#ffd600",
+    "error": "#ff1744",
+    "info": "#2979ff",
+    "scrollbar": "#2a2a2a",
+    "scrollbar_handle": "#3d3d3d",
+    "scrollbar_handle_hover": "#ff6a00",
+    "highlight_bg": "#ff6a0022",
+    "highlight_border": "#ff6a0066",
+    "row_hover": "#1f1f1f",
+    "row_selected": "#2a1500",
+    "tag_bg": "#2a2a2a",
+    "calendar_today": "#ff6a0033",
+    "calendar_cell": "#1a1a1a",
+    "calendar_cell_holiday": "#1f1200",
+    "calendar_header": "#141414",
+    "sidebar_bg": "#111111",
+    "sidebar_item_hover": "#1a1a1a",
+    "sidebar_item_active": "#2a1500",
+    "log_bg": "#0a0a0a",
+    "log_text": "#7a7a7a",
+    "log_error": "#ff4444",
+    "log_success": "#44ff88",
+    "log_info": "#4499ff",
+    "input_bg": "#1a1a1a",
+    "input_border": "#333333",
+    "input_focus": "#ff6a00",
+    "button_bg": "#ff6a00",
+    "button_hover": "#ff8533",
+    "button_text": "#ffffff",
+    "tab_bg": "#141414",
+    "tab_active": "#1e1e1e",
+    "tab_border": "#ff6a00"
+  },
+  "glow": {
+    "intensity": 12,
+    "accent_glow": "0 0 12px rgba(255, 106, 0, 0.6)",
+    "accent_glow_strong": "0 0 20px rgba(255, 106, 0, 0.9)",
+    "border_glow": "0 0 8px rgba(255, 106, 0, 0.4)",
+    "subtle_glow": "0 0 6px rgba(255, 106, 0, 0.25)"
+  },
+  "radius": {
+    "small": 4,
+    "medium": 8,
+    "large": 12,
+    "xlarge": 16,
+    "pill": 24
+  },
+  "opacity": {
+    "panel": 0.95,
+    "overlay": 0.85,
+    "dim": 0.6,
+    "ghost": 0.3
+  },
+  "font": {
+    "family": "Segoe UI",
+    "size_small": 10,
+    "size_normal": 12,
+    "size_medium": 13,
+    "size_large": 15,
+    "size_xlarge": 18,
+    "size_title": 22
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24
+  },
+  "animation": {
+    "hover_duration": 150,
+    "transition_duration": 250
+  }
+}

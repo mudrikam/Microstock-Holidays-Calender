@@ -1,0 +1,29 @@
+{
+  "api": {
+    "key": "Ln4tXaD5ycOWJ0Qw9ufQmiOHHoLK4vGE",
+    "base_url": "https://calendarific.com/api/v2",
+    "default_country": "US"
+  },
+  "cache": {
+    "expire_days": 7,
+    "use_sqlite": true,
+    "sqlite_path": "cache.db",
+    "json_fallback_path": "cache_fallback.json"
+  },
+  "ui": {
+    "window_width": 900,
+    "window_height": 746,
+    "sidebar_width": 200,
+    "detail_panel_width": 300,
+    "last_country": "WORLD",
+    "last_year": 2026,
+    "last_month": 2,
+    "view_mode": "list"
+  },
+  "app": {
+    "name": "Microstock Holiday Explorer",
+    "description": "A desktop app to explore public holidays worldwide using the Calendarific API",
+    "version": "1.0.0",
+    "author": "Desainia Studio"
+  }
+}
