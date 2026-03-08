@@ -1,11 +1,13 @@
+import os
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QFrame, QScrollArea, QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 import qtawesome as qta
 import helper.theme_system as theme
+from helper.search_helper import PLATFORMS, ico_path
 
 
 class MetaRow(QFrame):
@@ -47,6 +49,7 @@ class MetaRow(QFrame):
 
 class DetailPanel(QWidget):
     close_requested = Signal()
+    search_platform_requested = Signal(str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -259,6 +262,60 @@ class DetailPanel(QWidget):
                 row = MetaRow(icon_name, label, value, color)
                 self._content_layout.insertWidget(pos, row)
                 pos += 1
+
+        keyword = h.get("name", "")
+        if keyword:
+            btn_section_label = QLabel("Search on")
+            btn_section_label.setStyleSheet(f"""
+                color: {theme.color('text_muted')};
+                font-size: {theme.font_size('size_small')}px;
+                font-weight: bold;
+                letter-spacing: 1px;
+                background: transparent;
+            """)
+            self._content_layout.insertWidget(pos, btn_section_label)
+            pos += 1
+
+            btn_container = QWidget()
+            btn_container.setStyleSheet("background: transparent;")
+            btn_vbox = QVBoxLayout(btn_container)
+            btn_vbox.setContentsMargins(0, 0, 0, 0)
+            btn_vbox.setSpacing(4)
+
+            for p in PLATFORMS:
+                btn = QPushButton(p["name"])
+                btn.setFixedHeight(28)
+                btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                btn.setToolTip(f"Search '{keyword}' on {p['name']}")
+                btn.setStyleSheet(f"""
+                    QPushButton {{
+                        background-color: {theme.color('surface_overlay')};
+                        color: {theme.color('text_secondary')};
+                        border: 1px solid {theme.color('border')};
+                        border-radius: 5px;
+                        font-size: {theme.font_size('size_small')}px;
+                        padding: 0px 6px;
+                        text-align: left;
+                    }}
+                    QPushButton:hover {{
+                        background-color: {theme.color('accent_dim')};
+                        color: {theme.color('text_primary')};
+                        border: 1px solid {theme.color('accent')};
+                    }}
+                """)
+
+                ico_file = ico_path(p["id"])
+                if os.path.exists(ico_file):
+                    btn.setIcon(QIcon(ico_file))
+
+                pid = p["id"]
+                btn.clicked.connect(lambda checked=False, _pid=pid, _kw=keyword:
+                    self.search_platform_requested.emit(_pid, _kw))
+
+                btn_vbox.addWidget(btn)
+
+            self._content_layout.insertWidget(pos, btn_container)
+            pos += 1
 
     def _render_multiple(self, date_str: str, holidays: list):
         while self._content_layout.count() > 1:

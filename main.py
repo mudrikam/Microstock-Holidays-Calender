@@ -40,6 +40,7 @@ from widgets.calendar_view import CalendarView
 from widgets.detail_panel import DetailPanel
 from widgets.logs_panel import LogsPanel
 from widgets.config_tab import ConfigTab
+from widgets.search_tab import SearchTab
 from workers.api_worker import HolidayWorker, CountriesWorker, WorldHolidayWorker
 
 
@@ -364,20 +365,25 @@ class MainWindow(QMainWindow):
 
         self._holidays_tab = HolidaysTab()
         self._config_tab = ConfigTab()
+        self._search_tab = SearchTab()
 
         holidays_icon = None
         config_icon = None
+        search_icon = None
         try:
             holidays_icon = qta.icon("fa5s.calendar-check", color=theme.color("text_secondary"))
             config_icon = qta.icon("fa5s.cog", color=theme.color("text_secondary"))
+            search_icon = qta.icon("fa5s.search", color=theme.color("text_secondary"))
         except Exception:
             pass
 
         if holidays_icon:
             self._tab_widget.addTab(self._holidays_tab, holidays_icon, "Holidays")
+            self._tab_widget.addTab(self._search_tab, search_icon, "Search")
             self._tab_widget.addTab(self._config_tab, config_icon, "Configuration")
         else:
             self._tab_widget.addTab(self._holidays_tab, "Holidays")
+            self._tab_widget.addTab(self._search_tab, "Search")
             self._tab_widget.addTab(self._config_tab, "Configuration")
 
         layout.addWidget(self._tab_widget)
@@ -401,6 +407,7 @@ class MainWindow(QMainWindow):
 
         dp = self._holidays_tab.detail_panel
         dp.close_requested.connect(self._on_detail_closed)
+        dp.search_platform_requested.connect(self._on_search_platform_requested)
 
         self._config_tab.config_saved.connect(self._on_config_saved)
 
@@ -533,6 +540,13 @@ class MainWindow(QMainWindow):
 
     def _on_holiday_selected(self, holiday: dict):
         self._holidays_tab.detail_panel.show_holiday(holiday)
+        self._search_tab.set_holiday(holiday)
+
+    def _on_search_platform_requested(self, platform_id: str, keyword: str):
+        self._search_tab.set_holiday(self._holidays_tab.detail_panel._holiday)
+        self._search_tab.switch_to_platform(platform_id)
+        idx = self._tab_widget.indexOf(self._search_tab)
+        self._tab_widget.setCurrentIndex(idx)
 
     def _on_calendar_date_clicked(self, date_str: str, holidays: list):
         self._holidays_tab.detail_panel.show_date_holidays(date_str, holidays)
