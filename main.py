@@ -48,6 +48,7 @@ class TitleBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._drag_pos = None
+        self._is_maximized = False
         self.setObjectName("title_bar")
         self.setFixedHeight(38)
         self.setStyleSheet(f"""
@@ -127,10 +128,12 @@ class TitleBar(QWidget):
 
     def _toggle_max(self):
         w = self.window()
-        if w.isMaximized():
+        if self._is_maximized or w.isMaximized():
             w.showNormal()
+            self._is_maximized = False
         else:
             w.showMaximized()
+            self._is_maximized = True
 
     def _close(self):
         self.window().close()
@@ -142,8 +145,9 @@ class TitleBar(QWidget):
 
     def mouseMoveEvent(self, event):
         if self._drag_pos is not None and event.buttons() == Qt.MouseButton.LeftButton:
-            if self.window().isMaximized():
+            if self._is_maximized or self.window().isMaximized():
                 self.window().showNormal()
+                self._is_maximized = False
             self.window().move(event.globalPosition().toPoint() - self._drag_pos)
         super().mouseMoveEvent(event)
 
@@ -231,8 +235,7 @@ class MainWindow(QMainWindow):
         # Remove native title bar; use custom TitleBar widget
         self.setWindowFlags(
             Qt.WindowType.Window |
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowMinimizeButtonHint
+            Qt.WindowType.FramelessWindowHint
         )
         w = config_manager.get_ui("window_width", 1280)
         h = config_manager.get_ui("window_height", 800)
