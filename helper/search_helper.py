@@ -33,6 +33,12 @@ PLATFORMS = [
         "url":      "https://www.vecteezy.com/search?qterm={kw}&content_type=image",
     },
     {
+        "id":       "envato_elements",
+        "name":     "Envato Elements",
+        "ico":      "envato_elements.ico",
+        "url":      "https://elements.envato.com/all-items/{kw}",
+    },
+    {
         "id":       "miricanvas",
         "name":     "MiriCanvas",
         "ico":      "miricanvas.ico",
@@ -55,6 +61,30 @@ PLATFORMS = [
         "name":     "Dreamstime",
         "ico":      "dreamstime.ico",
         "url":      "https://www.dreamstime.com/search.php?srh_field={kw}",
+    },
+    {
+        "id":       "pngtree",
+        "name":     "Pngtree",
+        "ico":      "pngtree.ico",
+        "url":      "https://pngtree.com/so/{kw}",
+    },
+    {
+        "id":       "pikbest",
+        "name":     "Pikbest",
+        "ico":      "pikbest.ico",
+        "url":      "https://pikbest.com/search.php?m=tags&a=index&class=0-0-0-0-0-c0_0&key={kw}&group_c1=image",
+    },
+    {
+        "id":       "alamy",
+        "name":     "Alamy",
+        "ico":      "alamy.ico",
+        "url":      "https://www.alamy.com/stock-photo/{kw}.html?sortBy=relevant",
+    },
+    {
+        "id":       "123rf",
+        "name":     "123RF",
+        "ico":      "123rf.ico",
+        "url":      "https://www.123rf.com/stock-photo/{kw}.html",
     },
 ]
 
