@@ -1,11 +1,7 @@
 import os
-import json
-import time
-from datetime import datetime
-import urllib.request
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QTabWidget, QSizePolicy, QLineEdit, QPushButton, QSplitter
+    QTabWidget, QSizePolicy, QLineEdit, QPushButton
 )
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QIcon, QGuiApplication
@@ -28,69 +24,6 @@ _CHROME_UA = (
 _TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "temp")
 _PROFILE_DIR = os.path.join(_TEMP_DIR, "browser_profile")
 
-_IMAGEYE_EXT_ID = "agionbommeaifngbhincahgmoflcikhm"
-_IMAGEYE_CRX_DIR = os.path.join(_TEMP_DIR, "extensions")
-_IMAGEYE_CRX_PATH = os.path.join(_IMAGEYE_CRX_DIR, "imageye.crx")
-_IMAGEYE_UNPACKED_DIR = os.path.join(_IMAGEYE_CRX_DIR, "imageye_unpacked")
-_IMAGEYE_CRX_DOWNLOAD = (
-    "https://clients2.google.com/service/update2/crx"
-    "?response=redirect&prodversion=120.0.0.0&acceptformat=crx3,crx2"
-    f"&x=id%3D{_IMAGEYE_EXT_ID}%26installsource%3Dondemand%26uc"
-)
-
-
-def _extract_crx_to_folder(crx_path: str, out_dir: str) -> bool:
-    import struct, zipfile, io, shutil
-    try:
-        with open(crx_path, "rb") as f:
-            data = f.read()
-        magic = data[:4]
-        if magic != b"Cr24":
-            print(f"[EXT] Format CRX tidak dikenal: {magic}")
-            return False
-        version = struct.unpack_from("<I", data, 4)[0]
-        if version == 3:
-            proto_len = struct.unpack_from("<I", data, 8)[0]
-            zip_offset = 12 + proto_len
-        elif version == 2:
-            pub_len = struct.unpack_from("<I", data, 8)[0]
-            sig_len = struct.unpack_from("<I", data, 12)[0]
-            zip_offset = 16 + pub_len + sig_len
-        else:
-            print(f"[EXT] Versi CRX tidak dikenal: {version}")
-            return False
-        zip_data = data[zip_offset:]
-        if os.path.isdir(out_dir):
-            shutil.rmtree(out_dir)
-        os.makedirs(out_dir, exist_ok=True)
-        with zipfile.ZipFile(io.BytesIO(zip_data)) as zf:
-            zf.extractall(out_dir)
-        print(f"[EXT] CRX berhasil di-extract ke {out_dir}")
-        return True
-    except Exception as e:
-        print(f"[EXT] Gagal extract CRX: {e}")
-        return False
-
-
-def _try_download_imageye_crx() -> bool:
-    os.makedirs(_IMAGEYE_CRX_DIR, exist_ok=True)
-    req = urllib.request.Request(
-        _IMAGEYE_CRX_DOWNLOAD,
-        headers={"User-Agent": _CHROME_UA, "Accept": "*/*"}
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            data = resp.read()
-        with open(_IMAGEYE_CRX_PATH, "wb") as f:
-            f.write(data)
-        print(f"[EXT] Imageye CRX berhasil diunduh: {len(data):,} bytes → {_IMAGEYE_CRX_PATH}")
-        return True
-    except Exception as e:
-        print(f"[EXT] Gagal download Imageye CRX: {e}")
-        print(f"[EXT] Download manual dari: {_IMAGEYE_CRX_DOWNLOAD}")
-        print(f"[EXT] Simpan file sebagai: {_IMAGEYE_CRX_PATH}")
-        return False
-
 
 class _HeadersInterceptor(QWebEngineUrlRequestInterceptor):
     def interceptRequest(self, info):
@@ -110,22 +43,6 @@ class _HeadersInterceptor(QWebEngineUrlRequestInterceptor):
 class _BrowserPage(QWebEnginePage):
     _profile: QWebEngineProfile = None
     _interceptor: _HeadersInterceptor = None
-    imageye_ext_id: str = ""
-    _current_platform_id: str = "downloads"
-    _download_session_dir: str = ""
-    _download_session_time: float = 0.0
-    _DOWNLOAD_SESSION_TIMEOUT: float = 30.0
-
-    @classmethod
-    def _get_or_create_download_dir(cls) -> str:
-        now = time.time()
-        if not cls._download_session_dir or (now - cls._download_session_time) > cls._DOWNLOAD_SESSION_TIMEOUT:
-            ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            cls._download_session_dir = os.path.join(_TEMP_DIR, "downloads", cls._current_platform_id, ts)
-            os.makedirs(cls._download_session_dir, exist_ok=True)
-            print(f"[DL] New download session: {cls._download_session_dir}")
-        cls._download_session_time = now
-        return cls._download_session_dir
 
     @classmethod
     def get_profile(cls) -> QWebEngineProfile:
@@ -140,46 +57,6 @@ class _BrowserPage(QWebEnginePage):
             )
             cls._interceptor = _HeadersInterceptor()
             cls._profile.setUrlRequestInterceptor(cls._interceptor)
-
-            def _on_download_requested(download):
-                dl_dir = _BrowserPage._get_or_create_download_dir()
-                download.setDownloadDirectory(dl_dir)
-                suggested = download.suggestedFileName()
-                if suggested:
-                    download.setDownloadFileName(suggested)
-                download.accept()
-                print(f"[DL] Saving: {suggested!r} -> {dl_dir}")
-
-            cls._profile.downloadRequested.connect(_on_download_requested)
-
-            em = cls._profile.extensionManager()
-
-            def _on_ext_loaded(info):
-                try:
-                    ext_id = info.id()
-                    ext_name = info.name()
-                    _BrowserPage.imageye_ext_id = ext_id
-                    print(f"[EXT] Loaded: {ext_name} (id={ext_id})")
-                except Exception as e:
-                    print(f"[EXT] loadFinished info error: {e}")
-
-            em.loadFinished.connect(_on_ext_loaded)
-
-            if os.path.isdir(_IMAGEYE_UNPACKED_DIR) and os.path.exists(
-                os.path.join(_IMAGEYE_UNPACKED_DIR, "manifest.json")
-            ):
-                print(f"[EXT] Memuat Imageye dari {_IMAGEYE_UNPACKED_DIR}")
-                em.loadExtension(_IMAGEYE_UNPACKED_DIR)
-            else:
-                if not os.path.exists(_IMAGEYE_CRX_PATH):
-                    print("[EXT] Imageye belum ada, mencoba mengunduh...")
-                    _try_download_imageye_crx()
-                if os.path.exists(_IMAGEYE_CRX_PATH):
-                    print(f"[EXT] Mengekstrak Imageye CRX ...")
-                    if _extract_crx_to_folder(_IMAGEYE_CRX_PATH, _IMAGEYE_UNPACKED_DIR):
-                        print(f"[EXT] Memuat Imageye dari {_IMAGEYE_UNPACKED_DIR}")
-                        em.loadExtension(_IMAGEYE_UNPACKED_DIR)
-
         return cls._profile
 
     def __init__(self, parent=None):
@@ -216,11 +93,6 @@ class _PlatformBrowserWidget(QWidget):
             f" padding: 2px 6px; color: {theme.color('text_secondary')}; }}"
             f"QPushButton:hover {{ background: {theme.color('surface_raised')}; }}"
             f"QPushButton:disabled {{ color: {theme.color('text_muted')}; }}"
-        )
-        btn_active_style = (
-            f"QPushButton {{ background: {theme.color('accent_dim')}; border: 1px solid {theme.color('accent')};"
-            f" border-radius: 4px; padding: 2px 6px; color: {theme.color('accent')}; }}"
-            f"QPushButton:hover {{ background: {theme.color('accent_dim')}; }}"
         )
 
         self._btn_back = QPushButton()
@@ -262,52 +134,18 @@ class _PlatformBrowserWidget(QWidget):
         self._btn_copy.setToolTip("Copy URL")
         self._btn_copy.clicked.connect(self._copy_url)
 
-        self._btn_imageye = QPushButton()
-        self._btn_imageye.setFixedSize(28, 28)
-        self._btn_imageye.setStyleSheet(btn_style)
-        self._btn_imageye.setToolTip("Toggle Imageye Image Downloader")
-        ico_imageye = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "temp", "extensions", "imageye_unpacked", "imageye128.png"
-        )
-        if os.path.exists(ico_imageye):
-            self._btn_imageye.setIcon(QIcon(ico_imageye))
-        else:
-            try:
-                self._btn_imageye.setIcon(qta.icon("fa5s.images", color=theme.color("text_secondary")))
-            except Exception:
-                self._btn_imageye.setText("img")
-        self._btn_imageye.clicked.connect(self._toggle_imageye_panel)
-        self._imageye_panel_visible = False
-        self._btn_imageye_normal_style = btn_style
-        self._btn_imageye_active_style = btn_active_style
-
         nav_layout.addWidget(self._btn_back)
         nav_layout.addWidget(self._btn_forward)
         nav_layout.addWidget(self._btn_reload)
         nav_layout.addWidget(self._url_bar, 1)
         nav_layout.addWidget(self._btn_copy)
-        nav_layout.addWidget(self._btn_imageye)
 
-        # --- splitter: main browser | imageye side panel ---
-        self._splitter = QSplitter(Qt.Orientation.Horizontal)
-        self._splitter.setStyleSheet("QSplitter::handle { background: " + theme.color('border') + "; width: 1px; }")
-
+        # --- web view ---
         self._web_view = QWebEngineView()
         self._web_view.setPage(_BrowserPage(self._web_view))
         self._web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._web_view.loadFinished.connect(self._on_load_finished)
         self._web_view.urlChanged.connect(self._on_url_changed)
-
-        self._imageye_view = QWebEngineView()
-        self._imageye_view.setPage(_BrowserPage(self._imageye_view))
-        self._imageye_view.setFixedWidth(380)
-        self._imageye_view.setVisible(False)
-
-        self._splitter.addWidget(self._web_view)
-        self._splitter.addWidget(self._imageye_view)
-        self._splitter.setStretchFactor(0, 1)
-        self._splitter.setStretchFactor(1, 0)
 
         self._error_label = QLabel()
         self._error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -319,67 +157,8 @@ class _PlatformBrowserWidget(QWidget):
         self._error_label.setWordWrap(True)
 
         layout.addWidget(nav_bar)
-        layout.addWidget(self._splitter, 1)
+        layout.addWidget(self._web_view, 1)
         layout.addWidget(self._error_label)
-
-    def _toggle_imageye_panel(self):
-        self._imageye_panel_visible = not self._imageye_panel_visible
-        self._imageye_view.setVisible(self._imageye_panel_visible)
-        if self._imageye_panel_visible:
-            self._btn_imageye.setStyleSheet(self._btn_imageye_active_style)
-            ext_id = _BrowserPage.imageye_ext_id
-            if ext_id:
-                popup_url = f"chrome-extension://{ext_id}/popup.html"
-                print(f"[EXT] Opening Imageye panel: {popup_url}")
-                self._imageye_view.loadFinished.connect(self._on_imageye_popup_loaded)
-                self._imageye_view.load(QUrl(popup_url))
-            else:
-                print("[EXT] Extension ID belum tersedia, coba lagi sebentar")
-        else:
-            self._btn_imageye.setStyleSheet(self._btn_imageye_normal_style)
-
-    def _on_imageye_popup_loaded(self, ok: bool):
-        self._imageye_view.loadFinished.disconnect(self._on_imageye_popup_loaded)
-        if not ok:
-            return
-        scraper_path = os.path.join(_IMAGEYE_UNPACKED_DIR, "imageScraper.js")
-        if not os.path.exists(scraper_path):
-            print("[EXT] imageScraper.js not found")
-            return
-        with open(scraper_path, "r", encoding="utf-8") as f:
-            scraper_js = f.read()
-
-        imageye_view_ref = self._imageye_view
-
-        def _on_scraper_result(result):
-            if result is None:
-                print("[EXT] imageScraper returned None (page may not have loaded yet)")
-                return
-            images = result.get("images", []) if isinstance(result, dict) else []
-            print(f"[EXT] imageScraper found {len(images)} images")
-            result_json = json.dumps(result)
-            fix_js = f"""
-(function() {{
-    var resultData = {result_json};
-    function applyFix(attempt) {{
-        if (typeof Ie === 'undefined' || !Ie.getImagesCallback) {{
-            if (attempt < 20) {{
-                setTimeout(function() {{ applyFix(attempt + 1); }}, 200);
-            }} else {{
-                console.log('[EXT-FIX] Ie never became available');
-            }}
-            return;
-        }}
-        console.log('[EXT-FIX] Injecting ' + (resultData.images ? resultData.images.length : 0) + ' images into Imageye');
-        Ie.initiated = false;
-        Ie.getImagesCallback([{{documentId:null, frameId:null, result:resultData}}]);
-    }}
-    applyFix(0);
-}})();
-"""
-            imageye_view_ref.page().runJavaScript(fix_js)
-
-        self._web_view.page().runJavaScript(scraper_js, _on_scraper_result)
 
     def _on_url_changed(self, url: QUrl):
         self._url_bar.setText(url.toString())
@@ -410,8 +189,6 @@ class _PlatformBrowserWidget(QWidget):
         if self._loaded_keyword == keyword:
             return
         self._loaded_keyword = keyword
-        _BrowserPage._current_platform_id = self._platform["id"]
-        _BrowserPage._download_session_dir = ""  # reset session on new keyword
         url = build_url(self._platform["id"], keyword)
         print(f"[SEARCH] Loading {self._platform['name']}: {url}")
         self._web_view.load(QUrl(url))
