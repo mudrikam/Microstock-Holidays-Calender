@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QComboBox, QLineEdit,
     QPushButton, QLabel, QSizePolicy
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont
 import qtawesome as qta
 import helper.theme_system as theme
@@ -18,6 +18,10 @@ class FilterBar(QWidget):
         super().__init__(parent)
         self._countries = []
         self._current_mode = "list"
+        self._search_timer = QTimer(self)
+        self._search_timer.setSingleShot(True)
+        self._search_timer.setInterval(300)
+        self._search_timer.timeout.connect(self._emit_search)
         self._setup_ui()
 
     def _setup_ui(self):
@@ -220,7 +224,11 @@ class FilterBar(QWidget):
             self.country_changed.emit(code)
 
     def _on_search_changed(self, text: str):
-        self.search_changed.emit(text)
+        if self._search_timer is not None:
+            self._search_timer.start()
+
+    def _emit_search(self):
+        self.search_changed.emit(self._search_field.text())
 
     def populate_countries(self, countries: list):
         self._country_combo.blockSignals(True)
